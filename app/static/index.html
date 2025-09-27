@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Pi-Dash</title>
+  <style>
+    /* ================= Core theme: DARK, same on all devices ================= */
+    :root{
+      --bg:#0a0f1d;
+      --fg:#e9eeff;
+      --muted:#b9c5ff;
+      --border:rgba(255,255,255,.12);
+      --radius:16px;
+      --footer-h:56px;
+      --ok:#2ecc71; --warn:#f1c40f; --crit:#e74c3c;
+
+      /* responsive typography */
+      --fs-base: clamp(12px, 1.6vw, 14px);
+      --fs-small: clamp(11px, 1.4vw, 13px);
+      --fs-title: clamp(15px, 2vw, 18px);
+      --fs-brand: clamp(15px, 2.2vw, 20px);
+
+      /* bar paddings */
+      --bar-pad-y: clamp(8px, 1.4vw, 14px);
+      --bar-pad-x: clamp(10px, 2vw, 18px);
+      --btn-pad-y: clamp(6px, 1.2vw, 8px);
+      --btn-pad-x: clamp(8px, 2vw, 12px);
+      --chip-pad-y: clamp(6px, 1.2vw, 8px);
+      --chip-pad-x: clamp(8px, 2vw, 12px);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{
+      background:#0a0f1d; /* Ensure html has background to prevent white flash */
+    }
+    body{
+      margin:0;
+      color:var(--fg);
+      font: 400 var(--fs-base)/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,"Noto Sans","Helvetica Neue",sans-serif;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+
+      /* Dark gradient background (consistent across devices) */
+    background:
+        radial-gradient(1200px 800px at 20% -10%, #142248 0%, #0b1430 45%, var(--bg) 70%),
+        linear-gradient(180deg, #0b1430 0%, var(--bg) 100%);
+      position:relative;
+      overflow-y:auto;
+    }
+    /* Transparent noise layer to prevent banding */
+    body::before{
+      content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+      opacity:.05;
+      background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.7'/></feComponentTransfer></filter><rect width='120' height='120' filter='url(%23n)'/></svg>");
+      background-size:120px 120px;
+      mix-blend-mode:normal;
+    }
+
+    /* ================= Top / Bottom bars ================= */
+    .topbar{
+      position:sticky; top:0; z-index:30;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:var(--bar-pad-y) var(--bar-pad-x);
+      background:rgba(10,15,29,.78);
+      border-bottom:1px solid var(--border);
+      backdrop-filter:blur(10px) saturate(160%);
+    }
+    .brand{
+      font-weight:800; font-size:var(--fs-brand); white-space:nowrap; margin-right:8px;
+    }
+    .top-actions{
+      display:flex; align-items:center; gap:8px; flex-wrap:nowrap; min-width:0;
+    }
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.08);
+      color:var(--fg);
+      border-radius:12px;
+      padding:var(--btn-pad-y) var(--btn-pad-x);
+      font-size:var(--fs-small);
+      white-space:nowrap;
+    }
+    .btn:hover{background:rgba(255,255,255,.12)}
+    .btn-danger{border-color:rgba(231,76,60,.35); background:rgba(231,76,60,.2)}
+    .btn-danger:hover{background:rgba(231,76,60,.28)}
+    .btn-line{border:1px dashed var(--border); background:transparent}
+    .chip{
+      display:inline-block; border-radius:999px;
+      padding:var(--chip-pad-y) var(--chip-pad-x);
+      background:rgba(255,255,255,.07); border:1px solid var(--border);
+      font-size:var(--fs-small);
+      max-width:42vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+
+    footer{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(10,15,29,.86);
+      border-top:1px solid var(--border); z-index:20;
+      padding:0 10px; text-align:center;
+      font-size:clamp(11px, 1.6vw, 13px);
+      backdrop-filter:blur(10px) saturate(160%);
+    }
+
+    /* ================= Content ================= */
+    main{
+      padding:16px clamp(10px, 2vw, 18px);
+      max-width:1200px; margin:0 auto;
+      padding-bottom:calc(var(--footer-h) + 22px); /* Spacer to avoid footer overlap */
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:16px; margin:14px 0;
+      box-shadow:0 20px 40px rgba(0,0,0,.25)
+    }
+    .row{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px}
+    .section-title{font-weight:700; font-size:var(--fs-title); margin:0 0 12px 2px}
+    .muted{opacity:.85; color:var(--muted); font-size:var(--fs-small)}
+
+    .kv{display:grid; grid-template-columns:140px 1fr; column-gap:16px; row-gap:12px; align-items:start}
+    .kv > div:nth-child(odd){ color:var(--muted); padding-top:2px; font-size:var(--fs-small) }
+
+    .badge{
+      display:inline-block; border-radius:12px;
+      padding:8px 12px; margin-top:6px;
+      background:rgba(255,255,255,.08); border:1px solid var(--border);
+      font-size:var(--fs-base);
+    }
+    .ok{background:rgba(46,204,113,.18); border-color:rgba(46,204,113,.35)}
+    .warn{background:rgba(241,196,15,.18); border-color:rgba(241,196,15,.35)}
+    .crit{background:rgba(231,76,60,.18); border-color:rgba(231,76,60,.35)}
+
+    .charts{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px}
+    canvas{width:100% !important; height:auto !important}
+
+    /* ================= Token Modal (light gray for readability) ================= */
+    dialog::backdrop{ background:rgba(17,21,30,.55) }
+    dialog{
+      border:none; padding:0; border-radius:20px; width:min(420px, 92vw);
+      background:#eef1f6; color:#0b1224; overflow:hidden;
+      box-shadow:0 30px 80px rgba(0,0,0,.45)
+    }
+    .dlg-head{padding:16px 18px; background:#e5eaf3; border-bottom:1px solid #dae1ee; font-weight:700; color:#0b1224}
+    .dlg-body{padding:18px}
+    .dlg-foot{padding:14px 18px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #dae1ee; background:#eaf0f8}
+    .input{width:100%; padding:12px 14px; border-radius:12px; color:#0b1224; border:1px solid #cfd6e6; background:#fff; outline:none}
+    .input:focus{border-color:#5b8ef5; box-shadow:0 0 0 3px rgba(91,142,245,.25)}
+    .btn-primary{background:linear-gradient(180deg, #7fb2ff, #5b8ef5); color:#ffffff; border:none}
+
+    /* ================= Mobile fine-tuning ================= */
+    @media (max-width: 520px){
+      .top-actions{ gap:6px }
+      .chip{ max-width:54vw }         /* Reserve space for buttons */
+      .kv{ grid-template-columns:120px 1fr }
+    }
+    @media (max-width: 380px){
+      .chip{ display:none }           /* Hide status chip on very small screens */
+      .brand{ margin-right:0 }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand" data-i18n="title">Dashboard</div>
+    <div class="top-actions">
+      <button id="langBtn" class="btn" data-i18n="btnLang" title="Language">EN</button>
+      <div id="connChip" class="chip">Status: Connecting…</div>
+      <button id="logoutBtn" class="btn btn-danger" data-i18n="logout">Logout</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- Block 1 -->
+    <div class="card">
+      <div class="row">
+        <div>
+          <h3 class="section-title" data-i18n="device">Device</h3>
+          <div class="kv">
+            <div data-i18n="hostname">Hostname</div><div id="metaHost" class="badge">—</div>
+          </div>
+        </div>
+        <div>
+          <h3 class="section-title" data-i18n="status">Status</h3>
+          <div class="kv">
+            <div data-i18n="connection">Connection</div><div id="conn" class="badge">Connecting…</div>
+            <div data-i18n="lastUpdate">Last Update</div><div id="last" class="badge">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Block 2 -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h3 class="section-title" style="margin:0" data-i18n="metrics">Metrics (Realtime)</h3>
+        <button id="clearBtn" class="btn btn-line" data-i18n="clear">Clear graphs</button>
+      </div>
+      <div class="charts" style="margin-top:8px">
+        <div><div class="muted" style="margin:2px" data-i18n="cpuL">CPU %</div><canvas id="cpuChart"></canvas></div>
+        <div><div class="muted" style="margin:2px" data-i18n="memL">Memory %</div><canvas id="memChart"></canvas></div>
+        <div><div class="muted" style="margin:2px" data-i18n="diskL">Disk %</div><canvas id="diskChart"></canvas></div>
+        <div><div class="muted" style="margin:2px" data-i18n="tempL">Temp °C</div><canvas id="tempChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Block 3 -->
+    <div class="card">
+      <h3 class="section-title" data-i18n="summary">Overall Status</h3>
+      <div class="row" id="quick"></div>
+    </div>
+
+    <!-- Block 4 -->
+    <div class="card">
+      <h3 class="section-title" data-i18n="specs">Board Specs</h3>
+      <div class="row" id="specs"></div>
+    </div>
+  </main>
+
+  <footer>© 2025 PiDash RT. All rights reserved | Developed by Thanetphon026</footer>
+
+  <!-- Token Modal -->
+  <dialog id="login">
+    <form id="loginForm" autocomplete="off" onsubmit="return false">
+      <div class="dlg-head" data-i18n="authTitle">Authentication</div>
+      <div class="dlg-body">
+        <p class="muted" style="margin:0 0 10px;color:#4b5563" data-i18n="authDesc">
+          Please enter API Token to access this board.
+        </p>
+        <label for="token" style="display:block;margin-bottom:6px;color:#334155;font-weight:600" data-i18n="apiToken">API Token</label>
+        <input id="token" class="input" type="password" placeholder="e.g. MySecurePiDash123!" inputmode="text" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" name="pi_token"/>
+      </div>
+      <div class="dlg-foot">
+        <button id="saveBtn" class="btn-primary" style="padding:10px 14px;border-radius:12px" data-i18n="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>
